@@ -1,0 +1,118 @@
+{
+  "name": "Automated Data Cleaning & Sanitation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1bJGgrX-MxSg_zUGOesikIntbMsDrIp1hJ-FEkqgw2No",
+          "mode": "list",
+          "cachedResultName": "Code Node",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bJGgrX-MxSg_zUGOesikIntbMsDrIp1hJ-FEkqgw2No/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bJGgrX-MxSg_zUGOesikIntbMsDrIp1hJ-FEkqgw2No/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        0
+      ],
+      "id": "0abc54cb-a13b-4d68-8d14-124cdadf6c8e",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "hiGaOdx0yJVdYcZ2",
+          "name": "Google Sheets Trigger account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\n\nconst rawDate = item.date;\nconst fullName = String(item.Full_Name || \"\").trim().replace(/\\s+/g, \" \");\nconst parts = fullName.split(\" \");\nconst firstname = (parts[0] || \"\").trim();\nconst lastname = parts.slice(1).join(\" \").trim();\nconst email = String(item.Email || \"\").trim().toLowerCase();\nconst amount = item.amount;\nconst msg = String(item.message || \"\").trim();\n\nconst d = new Date(rawDate);\nconst niceDate = isNaN(d) ? \"\" : d.toDateString();\nconst subject = `Quote Request from ${firstname} - Amount ${amount}`;\nconst cleanMsg = msg.charAt(0).toUpperCase() + msg.slice(1);\n\nreturn {\n  json: {\n    firstname,\n    lastname,\n    email,\n    niceDate,\n    subject,\n    cleanMsg\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "6a13f54a-bd0f-42ae-b03b-630fd8840ca6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "=Hello ! {{ $json.firstname }}{{ $json.lastname }},thank you for your request\nAmount:5000\nDate:{{ $json.niceDate }}\nMessage:{{ $json.cleanMsg }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "e832d47d-0134-40e5-bcb2-7534c50c2621",
+      "name": "Send a message",
+      "webhookId": "c954415d-740a-4e7e-bc72-b79fc2a2d327",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "D8aA06uBVb5vR05d",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "45e2d07c-b427-4da1-9cb4-d115c138dce9",
+  "id": "omFNUc30mUXxdZf2",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {}
+}
